@@ -1,0 +1,33 @@
+// VerilogA for roic_c1513_thomas, dsm_comparator, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module dsm_comparator(inp,inn,clk,outp,outpbar,vdd,vss);
+inout inp,inn,clk,outp,outpbar,vdd,vss;
+electrical inp,inn,clk,outp,outpbar,vdd,vss;
+
+parameter real output_high=3.3;
+parameter real output_low=0;
+parameter real trise=100p;
+parameter real tfall=100p;
+parameter real tdel=1p;
+
+real vth;
+real hold,holdbar;
+
+
+ analog begin
+  @(initial_step)begin
+  vth = (V(vdd)+V(vss))/2.0;
+   end
+ 
+   @(cross(V(clk)-vth,-1,100p)) 
+   hold=((V(inp)>V(inn))?output_high:output_low);
+   holdbar=((V(inp)>V(inn))?output_low:output_high);
+
+  V(outp)<+transition(hold,tdel,trise,tfall);
+  V(outpbar)<+transition(holdbar,tdel,trise,tfall);
+end
+
+endmodule
