@@ -1,0 +1,34 @@
+// VerilogA for roic_c1513_thomas, dsm_switch, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module dsm_switch(s,inp,outp,vdd,vss);
+inout s,inp,outp,vdd,vss;
+electrical s,inp,outp,vdd,vss,x;
+
+parameter real Ron = 10K;
+parameter real Roff = 10G;
+parameter real tpd = 0p;
+parameter real tr = 100p;
+parameter real tf = 100p;
+
+real Rch;
+real Vth;
+
+analog begin
+ @(initial_step)begin
+  Vth = (V(vdd)+V(vss))/2.0;
+  Rch = Ron;
+  if(V(s)<Vth) 
+  Rch = Roff;
+end
+
+ @(cross(V(s)-Vth, +1, 100p)) Rch = Ron;
+ @(cross(V(s)-Vth, -1, 100p)) Rch = Roff;
+
+V(x,inp)<+0;
+I(outp,x)<+V(outp,x)/transition(Rch,tpd,tr,tf);
+
+end
+endmodule
