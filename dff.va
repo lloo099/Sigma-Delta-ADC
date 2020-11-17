@@ -1,0 +1,44 @@
+// VerilogA for roic_c1513_thomas, dsm_dff, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module dsm_dff(q,qb,clk,d,r);
+
+inout q,qb,clk,d,r;
+electrical q,qb,clk,d,r;
+
+parameter real vh=1;
+parameter real vl=-1;
+parameter real trise=100p;
+parameter real tfall=100p;
+parameter real tdel=1p;
+
+real vth;
+real out,outb;
+
+ analog begin
+  @(initial_step)begin
+  vth = 0.1;
+   end
+
+  @(cross(V(clk)-vth,-1)) begin
+    if(V(d)>vth) begin
+    out=vh;
+    outb=vl;
+   end else begin 
+    out=vl;
+    outb=vh;
+   end
+  end
+ 
+  if(V(r)>vth) begin
+    out=vl;
+    outb=vh;
+  end
+
+  V(q) <+ transition(out,tdel,trise,tfall);
+  V(qb) <+ transition(outb,tdel,trise,tfall);
+end
+
+endmodule

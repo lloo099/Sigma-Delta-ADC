@@ -1,0 +1,37 @@
+// VerilogA for roic_c1513_alvin, and_va, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module and_va(in1, in2, out);
+
+electrical in1, in2, out;
+
+parameter real digthresh=0;
+parameter real digoutlow=-1;
+parameter real digouthigh=1;
+parameter real trise=1n;
+parameter real tfall=1n;
+
+analog begin:main
+
+integer dig1, dig2, logicstate;
+
+//detect in1 threshold
+@(cross(V(in1)-digthresh, 0, 1n))
+if (V(in1)>digthresh)
+dig1=1;
+else
+dig1=0;
+
+//detect in2 threshold
+@(cross(V(in2)-digthresh, 0, 1n))
+if (V(in2)>digthresh)
+dig2=1;
+else
+dig2=0;
+
+logicstate = dig1 && dig2 ? digouthigh: digoutlow;
+V(out) <+ transition(logicstate, 0.0, trise, tfall);
+end
+endmodule

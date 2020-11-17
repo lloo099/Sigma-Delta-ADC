@@ -1,0 +1,68 @@
+// VerilogA for roic_c1513_alvin, ota_va, veriloga
+
+`include "constants.vams"
+`include "disciplines.vams"
+
+module ota_va(INN,INP,IB,OUTN,OUTP,AVDD,AVSS);
+
+inout INP,INN;
+inout IB;
+inout OUTP,OUTN;
+inout AVDD,AVSS;
+
+electrical INP,INN;
+electrical IB;
+electrical OUTP,OUTN;
+electrical AVDD,AVSS;
+
+electrical x;
+electrical VOH,VOL;
+
+parameter vos=0.0;
+parameter gmi=50m;
+parameter cin=0.00005p;
+parameter cout=0.00005p;
+parameter a0=100k;
+parameter ro=a0/gmi;
+parameter wp=628*10e6;
+parameter rb=1000;
+parameter vsat=1.0;
+parameter is=1e-15;
+parameter n=0.25;
+
+real iss;
+real ibias;
+
+analog begin
+
+V(VOL) <+ V(AVSS)+vsat;
+V(VOH) <+ V(AVDD)-vsat;
+
+ibias=I(IB);
+V(IB) <+ rb*ibias;
+
+I(INP,INN) <+ cin*ddt(V(INP,INN));
+V(x) <+ laplace_nd(V(INP,INN)-vos,{1},{1,1/wp});
+
+iss=gmi*V(x)/2;
+if (iss>ibias) iss=ibias;
+if (iss<-ibias) iss=-ibias;
+
+I(OUTP) <+ -iss;
+I(OUTP) <+ V(OUTP)/ro;
+I(OUTP) <+ cout*ddt(V(OUTP));
+I(OUTP) <+ is*(exp((V(OUTP)-V(VOH))/(n*$vt))-1);
+I(OUTP) <+ -is*(exp((V(VOL)-V(OUTP))/(n*$vt))-1);
+
+
+I(OUTN) <+ iss;
+I(OUTN) <+ V(OUTN)/ro;
+I(OUTN) <+ cout*ddt(V(OUTN));
+I(OUTN) <+ is*(exp((V(OUTN)-V(VOH))/(n*$vt))-1);
+I(OUTN) <+ -is*(exp((V(VOL)-V(OUTN))/(n*$vt))-1);
+
+
+end
+
+
+endmodule
